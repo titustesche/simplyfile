@@ -17,4 +17,9 @@ jobs:
       - name: Notify Webhook Success
         if: success()
         run: |
-          curl -H "Content-Type: application/json" -X POST -d '{"content":"🟢 Build succeeded"}' ${{ secrets.WEBHOOK_URL }}
+          curl -H "Content-Type: application/json" -d '{"content":"🟢 Build succeeded"}' ${{ secrets.WEBHOOK_URL }}
+
+      - name: Notify Webhook Failure
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" -d '{"content":"🔴 Build failed"}' ${{ secrets.WEBHOOK_URL }}
