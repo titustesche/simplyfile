@@ -1,0 +1,20 @@
+name: push-any.yaml
+on:
+  push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test
+        run: mvn test
+
+      - name: Build
+        run: mvn package
+
+      - name: Notify Webhook Success
+        if: success()
+        run: |
+          curl -H "Content-Type: application/json" -X POST -d '{"content":"🟢 Build succeeded"}' ${{ secrets.WEBHOOK_URL }}

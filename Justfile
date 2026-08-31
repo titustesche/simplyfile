@@ -1,0 +1,17 @@
+#!/usr/bin/env just --justfile
+
+# maven build without tests
+build:
+   mvn -DskipTests clean package
+
+# start spring boot
+start:
+   docker compose up -d
+           
+# dump compile dependencies to dependencies.txt
+dependencies:
+  mvn dependency:tree -Dscope=compile > dependencies.txt
+
+# dump dependencies updates to updates.txt
+updates:
+  mvn versions:display-dependency-updates > updates.txt    

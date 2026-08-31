@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:12.2
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+
+  redis:
+    image: redis:6.0.6
+    ports:
+      - "6379:6379"
+    environment:
+      REDIS_PASSWORD: 123456
