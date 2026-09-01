@@ -49,9 +49,13 @@ jobs:
       - name: Notify Webhook Success
         if: success()
         run: |
-          curl -H "Content-Type: application/json" -d '{"content":"🟢 Build succeeded\nTests: ${{ steps.tests.outputs.total }} total, ✅ ${{ steps.tests.outputs.passed }} passed, ❌ ${{ steps.tests.outputs.failures }} failed, ⚠️ ${{ steps.tests.outputs.errors }} errors, ⏭️ ${{ steps.tests.outputs.skipped }} skipped"}' ${{ secrets.WEBHOOK_URL }}
+          COMMIT_MSG=$(git log -1 --pretty=%s | head -c 100 | sed 's/"/\\"/g')
+          SHORT_SHA="${GITHUB_SHA::7}"
+          curl -H "Content-Type: application/json" -d '{"content":"🟢 **Build succeeded** on `${{ github.ref_name }}`\n> '"$COMMIT_MSG"' ([`'"$SHORT_SHA"'`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}) by ${{ github.actor }})\n\n**Tests:** ${{ steps.tests.outputs.total }} total — ✅ ${{ steps.tests.outputs.passed }} passed · ❌ ${{ steps.tests.outputs.failures }} failed · ⚠️ ${{ steps.tests.outputs.errors }} errors · ⏭️ ${{ steps.tests.outputs.skipped }} skipped\n\n🔗 [View workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"}' ${{ secrets.WEBHOOK_URL }}
 
       - name: Notify Webhook Failure
         if: failure()
         run: |
-          curl -H "Content-Type: application/json" -d '{"content":"🔴 Build failed\nTests: ${{ steps.tests.outputs.total }} total, ✅ ${{ steps.tests.outputs.passed }} passed, ❌ ${{ steps.tests.outputs.failures }} failed, ⚠️ ${{ steps.tests.outputs.errors }} errors, ⏭️ ${{ steps.tests.outputs.skipped }} skipped"}' ${{ secrets.WEBHOOK_URL }}
+          COMMIT_MSG=$(git log -1 --pretty=%s | head -c 100 | sed 's/"/\\"/g')
+          SHORT_SHA="${GITHUB_SHA::7}"
+          curl -H "Content-Type: application/json" -d '{"content":"🔴 **Build failed** on `${{ github.ref_name }}`\n> '"$COMMIT_MSG"' ([`'"$SHORT_SHA"'`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}) by ${{ github.actor }})\n\n**Tests:** ${{ steps.tests.outputs.total }} total — ✅ ${{ steps.tests.outputs.passed }} passed · ❌ ${{ steps.tests.outputs.failures }} failed · ⚠️ ${{ steps.tests.outputs.errors }} errors · ⏭️ ${{ steps.tests.outputs.skipped }} skipped\n\n🔗 [View workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"}' ${{ secrets.WEBHOOK_URL }}
