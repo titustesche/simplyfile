@@ -80,7 +80,7 @@ jobs:
       - name: Notify Discord
         if: always()
         env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           JOB_STATUS: ${{ job.status }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_TITLE: ${{ github.event.pull_request.title }}
@@ -89,8 +89,8 @@ jobs:
         run: |
           set -o pipefail
 
-          if [ -z "$DISCORD_WEBHOOK" ]; then
-            echo "::error::DISCORD_WEBHOOK secret is not set or not available to this run (check repository secrets; secrets are not passed to workflows triggered from forks)."
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "::error::WEBHOOK_URL secret is not set or not available to this run (check repository secrets; secrets are not passed to workflows triggered from forks)."
             exit 1
           fi
 
@@ -147,4 +147,4 @@ jobs:
               --write-out '\nDiscord webhook HTTP status: %{http_code}\n' \
               -H "Content-Type: application/json" \
               --data-binary @- \
-              "$DISCORD_WEBHOOK"
+              "$WEBHOOK_URL"
