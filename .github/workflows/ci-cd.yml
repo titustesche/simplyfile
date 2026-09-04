@@ -85,7 +85,7 @@ jobs:
           if-no-files-found: error
 
       - name: Notify Discord
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: always()
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           JOB_STATUS: ${{ job.status }}
