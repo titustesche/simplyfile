@@ -9,6 +9,13 @@ services:
     depends_on:
       - postgres
       - redis
+    environment:
+        SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/simplyfile
+        SPRING_DATASOURCE_USERNAME: simplyfile
+        SPRING_DATASOURCE_PASSWORD: 123456
+        SPRING_REDIS_HOST: redis
+        SPRING_REDIS_PORT: 6379
+        SPRING_REDIS_PASSWORD: 123456
 
   postgres:
     image: postgres:12.2
