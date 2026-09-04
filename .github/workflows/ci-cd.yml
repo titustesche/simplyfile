@@ -2,11 +2,6 @@ name: CI/CD
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
 
 permissions:
   contents: read
@@ -89,43 +84,6 @@ jobs:
           path: artifacts/simplyfile.jar
           if-no-files-found: error
 
-      - name: Upload JAR to deployment endpoint
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          DEPLOYMENT_BASE_URL: ${{ secrets.DEPLOYMENT_BASE_URL }}
-        run: |
-          if [ -z "$DEPLOYMENT_BASE_URL" ]; then
-            echo "::warning::DEPLOYMENT_BASE_URL secret is not configured; continuing without deployment upload."
-            echo "UPLOAD_STATUS=failed" >> "$GITHUB_ENV"
-            exit 0
-          fi
-
-          upload_url="${DEPLOYMENT_BASE_URL%/}/file/upload"
-          download_base_url="${DEPLOYMENT_BASE_URL%/}/file"
-
-          set +e
-          upload_response=$(curl --fail-with-body --show-error --silent \
-            -H "Content-Type: multipart/form-data" \
-            -X POST \
-            -F "file=@artifacts/simplyfile.jar" \
-            "$upload_url")
-          upload_exit_code=$?
-          set -e
-
-          if [ "$upload_exit_code" -ne 0 ]; then
-            echo "::warning::Deployment upload failed; continuing because deployment upload is non-blocking."
-            echo "UPLOAD_STATUS=failed" >> "$GITHUB_ENV"
-            exit 0
-          fi
-
-          upload_id=$(printf '%s' "$upload_response" | jq -r '.id // empty' 2>/dev/null || true)
-          if [ -n "$upload_id" ]; then
-            echo "UPLOAD_ID=$upload_id" >> "$GITHUB_ENV"
-            echo "UPLOAD_DOWNLOAD_URL=${download_base_url}/${upload_id}/download" >> "$GITHUB_ENV"
-          fi
-
-          echo "UPLOAD_STATUS=success" >> "$GITHUB_ENV"
-
       - name: Notify Discord
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
@@ -141,14 +99,10 @@ jobs:
             COLOR=15548997
             TITLE="❌ Simplyfile CI/CD fehlgeschlagen"
             DESCRIPTION="Mindestens ein CI/CD-Schritt ist fehlgeschlagen. Bitte prüfe die Workflow-Details."
-          elif [ "$UPLOAD_STATUS" = "failed" ]; then
-            COLOR=16766720
-            TITLE="⚠️ Simplyfile CI/CD erfolgreich, Upload fehlgeschlagen"
-            DESCRIPTION="Build und Tests waren erfolgreich, aber der Deployment-Upload konnte nicht abgeschlossen werden."
           else
             COLOR=5763719
             TITLE="✅ Simplyfile CI/CD erfolgreich"
-            DESCRIPTION="Build, Tests und Deployment wurden erfolgreich abgeschlossen."
+            DESCRIPTION="Build und Tests wurden erfolgreich abgeschlossen."
           fi
 
           jq -n \
@@ -162,8 +116,6 @@ jobs:
             --arg repository "$GITHUB_REPOSITORY" \
             --arg message "${COMMIT_MESSAGE:-Keine Commit-Nachricht}" \
             --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            --arg upload_status "${UPLOAD_STATUS:-not-run}" \
-            --arg upload_download_url "${UPLOAD_DOWNLOAD_URL:-}" \
             --argjson color "$COLOR" \
             --arg total "${TEST_TOTAL:-0}" \
             --arg passed "${TEST_PASSED:-0}" \
@@ -183,8 +135,6 @@ jobs:
                   {"name": "Bestanden", "value": ("✅ **" + $passed + "**"), "inline": true},
                   {"name": "Übersprungen", "value": ("⏭️ **" + $skipped + "**"), "inline": true},
                   {"name": "Fehlgeschlagen", "value": ("❌ **" + $failed + "**"), "inline": true},
-                  {"name": "Deployment-Upload", "value": (if $upload_status == "success" then "✅ Erfolgreich" elif $upload_status == "failed" then "⚠️ Fehlgeschlagen (nicht blockierend)" else "➖ Nicht ausgeführt" end), "inline": false},
-                  {"name": "Deployment-Download", "value": (if $upload_status == "success" and $upload_download_url != "" then ("[Artifact herunterladen](" + $upload_download_url + ")") elif $upload_status == "success" then "✅ Upload erfolgreich (keine Download-ID erhalten)" else "➖ Nicht verfügbar" end), "inline": false},
                   {"name": "Commit-Nachricht", "value": $message, "inline": false},
                   {"name": "Workflow", "value": ("[Workflow anzeigen](" + $run_url + ")"), "inline": false}
                 ],

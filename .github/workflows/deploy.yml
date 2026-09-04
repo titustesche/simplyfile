@@ -1,0 +1,146 @@
+name: Deploy
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '26'
+          cache: 'maven'
+
+      - name: Package
+        run: |
+          mvn package -DskipTests
+          mkdir -p artifacts
+          cp target/simplyfile-*.jar artifacts/simplyfile.jar
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: simplyfile
+          path: artifacts/simplyfile.jar
+          if-no-files-found: error
+
+      - name: Upload JAR to deployment endpoint
+        env:
+          DEPLOYMENT_BASE_URL: ${{ secrets.DEPLOYMENT_BASE_URL }}
+        run: |
+          if [ -z "$DEPLOYMENT_BASE_URL" ]; then
+            echo "::warning::DEPLOYMENT_BASE_URL secret is not configured; continuing without deployment upload."
+            echo "UPLOAD_STATUS=failed" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          upload_url="${DEPLOYMENT_BASE_URL%/}/file/upload"
+          download_base_url="${DEPLOYMENT_BASE_URL%/}/file"
+
+          set +e
+          upload_response=$(curl --fail-with-body --show-error --silent \
+            -H "Content-Type: multipart/form-data" \
+            -X POST \
+            -F "file=@artifacts/simplyfile.jar" \
+            "$upload_url")
+          upload_exit_code=$?
+          set -e
+
+          if [ "$upload_exit_code" -ne 0 ]; then
+            echo "::warning::Deployment upload failed; continuing because deployment upload is non-blocking."
+            echo "UPLOAD_STATUS=failed" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          upload_id=$(printf '%s' "$upload_response" | jq -r '.id // empty' 2>/dev/null || true)
+          if [ -n "$upload_id" ]; then
+            echo "UPLOAD_ID=$upload_id" >> "$GITHUB_ENV"
+            echo "UPLOAD_DOWNLOAD_URL=${download_base_url}/${upload_id}/download" >> "$GITHUB_ENV"
+          fi
+
+          echo "UPLOAD_STATUS=success" >> "$GITHUB_ENV"
+
+      - name: Notify Discord
+        if: always()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          JOB_STATUS: ${{ job.status }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then
+            exit 0
+          fi
+
+          if [ "$JOB_STATUS" != "success" ]; then
+            COLOR=15548997
+            TITLE="❌ Simplyfile Deployment fehlgeschlagen"
+            DESCRIPTION="Mindestens ein Deployment-Schritt ist fehlgeschlagen. Bitte prüfe die Workflow-Details."
+          elif [ "$UPLOAD_STATUS" = "failed" ]; then
+            COLOR=16766720
+            TITLE="⚠️ Simplyfile Deployment-Upload fehlgeschlagen"
+            DESCRIPTION="Das Paket wurde erfolgreich gebaut, aber der Deployment-Upload konnte nicht abgeschlossen werden."
+          else
+            COLOR=5763719
+            TITLE="✅ Simplyfile Deployment erfolgreich"
+            DESCRIPTION="Der Deployment-Upload wurde erfolgreich abgeschlossen."
+          fi
+
+          jq -n \
+            --arg title "$TITLE" \
+            --arg description "$DESCRIPTION" \
+            --arg status "${JOB_STATUS^^}" \
+            --arg branch "$GITHUB_BASE_REF" \
+            --arg commit "${MERGE_SHA:0:7}" \
+            --arg commit_url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$MERGE_SHA" \
+            --arg pr "#${PR_NUMBER}: ${PR_TITLE:-Kein Titel}" \
+            --arg pr_url "$PR_URL" \
+            --arg run_url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg upload_status "${UPLOAD_STATUS:-not-run}" \
+            --arg upload_download_url "${UPLOAD_DOWNLOAD_URL:-}" \
+            --argjson color "$COLOR" \
+            '{
+              "username": "Simplyfile Deployment",
+              "embeds": [{
+                "title": $title,
+                "description": $description,
+                "color": $color,
+                "fields": [
+                  {"name": "Status", "value": $status, "inline": true},
+                  {"name": "Branch", "value": ("`" + $branch + "`"), "inline": true},
+                  {"name": "Commit", "value": ("[`" + $commit + "`](" + $commit_url + ")"), "inline": true},
+                  {"name": "Pull Request", "value": ("[" + $pr + "](" + $pr_url + ")"), "inline": false},
+                  {"name": "Deployment-Upload", "value": (if $upload_status == "success" then "✅ Erfolgreich" elif $upload_status == "failed" then "⚠️ Fehlgeschlagen (nicht blockierend)" else "➖ Nicht ausgeführt" end), "inline": false},
+                  {"name": "Deployment-Download", "value": (if $upload_status == "success" and $upload_download_url != "" then ("[Artifact herunterladen](" + $upload_download_url + ")") elif $upload_status == "success" then "✅ Upload erfolgreich (keine Download-ID erhalten)" else "➖ Nicht verfügbar" end), "inline": false},
+                  {"name": "Workflow", "value": ("[Workflow anzeigen](" + $run_url + ")"), "inline": false}
+                ],
+                "author": {"name": $repository},
+                "footer": {"text": "GitHub Actions"},
+                "url": $run_url,
+                "timestamp": $timestamp
+              }]
+            }' | curl --fail-with-body --show-error --silent \
+              -H "Content-Type: application/json" \
+              --data-binary @- \
+              "$DISCORD_WEBHOOK"
