@@ -8,18 +8,54 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '26'
+          cache: 'maven'
+
       - name: Test
         run: mvn test
 
       - name: Build
         run: mvn package
 
+      - name: Collect test results
+        if: always()
+        id: tests
+        run: |
+          TOTAL=0
+          FAILURES=0
+          ERRORS=0
+          SKIPPED=0
+          shopt -s nullglob
+          for f in target/surefire-reports/TEST-*.xml; do
+            T=$(sed -n 's/.*<testsuite[^>]*tests="\([0-9]*\)".*/\1/p' "$f" | head -n1)
+            F=$(sed -n 's/.*<testsuite[^>]*failures="\([0-9]*\)".*/\1/p' "$f" | head -n1)
+            E=$(sed -n 's/.*<testsuite[^>]*errors="\([0-9]*\)".*/\1/p' "$f" | head -n1)
+            S=$(sed -n 's/.*<testsuite[^>]*skipped="\([0-9]*\)".*/\1/p' "$f" | head -n1)
+            TOTAL=$((TOTAL + ${T:-0}))
+            FAILURES=$((FAILURES + ${F:-0}))
+            ERRORS=$((ERRORS + ${E:-0}))
+            SKIPPED=$((SKIPPED + ${S:-0}))
+          done
+          PASSED=$((TOTAL - FAILURES - ERRORS - SKIPPED))
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
+          echo "failures=$FAILURES" >> "$GITHUB_OUTPUT"
+          echo "errors=$ERRORS" >> "$GITHUB_OUTPUT"
+          echo "skipped=$SKIPPED" >> "$GITHUB_OUTPUT"
+
       - name: Notify Webhook Success
         if: success()
         run: |
-          curl -H "Content-Type: application/json" -d '{"content":"🟢 Build succeeded"}' ${{ secrets.WEBHOOK_URL }}
+          COMMIT_MSG=$(git log -1 --pretty=%s | head -c 100 | sed 's/"/\\"/g')
+          SHORT_SHA="${GITHUB_SHA::7}"
+          curl -H "Content-Type: application/json" -d '{"content":"🟢 **Build succeeded** on `${{ github.ref_name }}`\n> '"$COMMIT_MSG"' ([`'"$SHORT_SHA"'`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}) by ${{ github.actor }})\n\n**Tests:** ${{ steps.tests.outputs.total }} total — ✅ ${{ steps.tests.outputs.passed }} passed · ❌ ${{ steps.tests.outputs.failures }} failed · ⚠️ ${{ steps.tests.outputs.errors }} errors · ⏭️ ${{ steps.tests.outputs.skipped }} skipped\n\n🔗 [View workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"}' ${{ secrets.WEBHOOK_URL }}
 
       - name: Notify Webhook Failure
         if: failure()
         run: |
-          curl -H "Content-Type: application/json" -d '{"content":"🔴 Build failed"}' ${{ secrets.WEBHOOK_URL }}
+          COMMIT_MSG=$(git log -1 --pretty=%s | head -c 100 | sed 's/"/\\"/g')
+          SHORT_SHA="${GITHUB_SHA::7}"
+          curl -H "Content-Type: application/json" -d '{"content":"🔴 **Build failed** on `${{ github.ref_name }}`\n> '"$COMMIT_MSG"' ([`'"$SHORT_SHA"'`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}) by ${{ github.actor }})\n\n**Tests:** ${{ steps.tests.outputs.total }} total — ✅ ${{ steps.tests.outputs.passed }} passed · ❌ ${{ steps.tests.outputs.failures }} failed · ⚠️ ${{ steps.tests.outputs.errors }} errors · ⏭️ ${{ steps.tests.outputs.skipped }} skipped\n\n🔗 [View workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"}' ${{ secrets.WEBHOOK_URL }}
