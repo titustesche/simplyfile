@@ -22,25 +22,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   osv:
-    runs-on: ubuntu-latest
-
     permissions:
-      actions: read
       security-events: write
       contents: read
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: OSV Scanner
-        uses: google/osv-scanner-action@v2.5.0
-        with:
-          scan-args: |-
-            --recursive
-            ./
+      actions: read
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.5.0"
+    with:
+      scan-args: |-
+        ./
 
   trivy:
     runs-on: ubuntu-latest
