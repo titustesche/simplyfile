@@ -87,8 +87,11 @@ jobs:
           PR_URL: ${{ github.event.pull_request.html_url }}
           MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
         run: |
+          set -o pipefail
+
           if [ -z "$DISCORD_WEBHOOK" ]; then
-            exit 0
+            echo "::error::DISCORD_WEBHOOK secret is not set or not available to this run (check repository secrets; secrets are not passed to workflows triggered from forks)."
+            exit 1
           fi
 
           if [ "$JOB_STATUS" != "success" ]; then
@@ -141,6 +144,7 @@ jobs:
                 "timestamp": $timestamp
               }]
             }' | curl --fail-with-body --show-error --silent \
+              --write-out '\nDiscord webhook HTTP status: %{http_code}\n' \
               -H "Content-Type: application/json" \
               --data-binary @- \
               "$DISCORD_WEBHOOK"
