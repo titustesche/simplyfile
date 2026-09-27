@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${file.name}">Title</title>
+</head>
+    <body>
+        <div class="container">
+            <h1 th:text="${file.name}">File Name</h1>
+            <a th:href="@{${file.id} + '/download'}">Download</a>
+        </div>
+    </body>
+</html>

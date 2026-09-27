@@ -6,7 +6,13 @@ build:
 
 # start spring boot
 start:
-   docker compose up -d
+   docker compose up -d --build
+
+stop:
+   docker compose down
+
+restart:
+    just stop && just start
            
 # dump compile dependencies to dependencies.txt
 dependencies:
