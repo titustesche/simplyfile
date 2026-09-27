@@ -2,12 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${file.name}">Title</title>
+    <title th:text="${file.filename}">Title</title>
+    <link rel="stylesheet" th:href="@{/css/root.css}">
+    <link rel="stylesheet" th:href="@{/css/file.css}">
 </head>
     <body>
-        <div class="container">
-            <h1 th:text="${file.name}">File Name</h1>
-            <a th:href="@{${file.id} + '/download'}">Download</a>
+    <header th:replace="fragments/header :: header"></header>
+        <div class="fileInfoContainer">
+            <h1
+                th:text="${file.filename}"
+                class="fileTitle"
+            >File Name</h1>
+            <div class="fileInfoShelf">
+                <p class="fileSize">Size: <span th:text="${file.size}">Size</span> bytes</p>
+                <p class="fileHash">SHA256: <span th:text="${file.sha256}">Hash</span></p>
+            </div>
+            <a class="downloadButton" th:href="@{'file/' + ${file.id} + '/download'}">Download</a>
         </div>
     </body>
 </html>

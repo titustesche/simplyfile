@@ -31,7 +31,7 @@ class FileControllerTest {
     void setUp() {
         fileService = mock(FileService.class);
         FileRepository repository = mock(FileRepository.class);
-        FileController controller = new FileController(fileService, repository);
+        FileController controller = new FileController(fileService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 

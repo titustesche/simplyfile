@@ -1,10 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/css/root.css}">
+    <link rel="stylesheet" th:href="@{/css/files.css}">
 </head>
 <body>
-$END$
+    <header th:replace="~{fragments/header :: header}"></header>
+    <div class="fileEntryList">
+        <a class="fileEntry" th:each="file : ${files}" th:href="@{/file/{id}(id=${file.id})}">
+            <img class="fileIcon" th:src="@{/icons/file.svg}" alt="File Icon">
+            <p class="fileName" th:text="${file.filename}"></p>
+            <p class="fileUploadDate">01/01/1970</p>
+            <div class="fileInfoShelf">
+                <div class="fileInfoEntry">
+                    <p>Size:</p>
+                    <p th:text="${file.size}"></p>
+                </div>
+                <div class="fileInfoEntry">
+                    <p>Type:</p>
+                    <p th:text="${file.type}"></p>
+                </div>
+            </div>
+        </a>
+    </div>
 </body>
 </html>

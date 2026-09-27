@@ -1,0 +1,66 @@
+.fileEntryList {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 2.5rem;
+    width: min(80vw, 95%);
+    margin: auto;
+}
+
+.fileEntry {
+    width: 100%;
+    height: 100%;
+    border: 1px solid rgb(135 135 135 / 0.5);
+    color: white;
+    text-decoration: none;
+    padding: .5rem;
+    border-radius: 5px;
+
+    display: grid;
+    grid-template-areas:
+            "icon name date"
+            "info info info";
+
+    grid-template-columns: auto 1fr auto;
+}
+
+.fileEntry:hover {
+    background-color: rgb(135 135 135 / 0.5);
+}
+
+.fileIcon {
+    width: 100%;
+    height: 100%;
+    max-width: 1.5rem;
+    max-height: 1.5rem;
+    color: white;
+    grid-area: icon;
+    align-self: center;
+    vertical-align: middle;
+    padding: 1rem;
+}
+
+.fileName {
+    grid-area: name;
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+    padding: 1rem;
+}
+
+.fileInfoShelf {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-area: info;
+}
+
+.fileInfoEntry {
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0.1rem;
+
+    * {
+        margin: 0;
+        padding: 0;
+    }
+}
