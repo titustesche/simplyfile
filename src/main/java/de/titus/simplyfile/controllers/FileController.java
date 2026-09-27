@@ -19,14 +19,11 @@ import java.util.UUID;
 public class FileController {
 
     private final FileService fileService;
-    private final FileRepository repository;
 
     public FileController(
-            FileService fileService,
-            FileRepository repository
+            FileService fileService
     ) {
         this.fileService = fileService;
-        this.repository = repository;
     }
 
     @PostMapping("upload")
@@ -36,7 +33,7 @@ public class FileController {
         return ResponseEntity.ok(fileService.upload(file));
     }
 
-    @GetMapping("/{id}/download")
+    @GetMapping("{id}/download")
     public ResponseEntity<Resource> download(@PathVariable("id") UUID id) throws IOException {
 
         FileModel file = fileService.get(id);

@@ -7,7 +7,13 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -32,9 +38,15 @@ public class FileService {
         try {
             String storageKey = storage.store(file);
 
+            //region Calculate SHA256
+            String sha256;
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(file.getBytes());
+            sha256 = Base64.getEncoder().encodeToString(hash);
+
             FileModel fileModel = new FileModel(
                     file.getOriginalFilename(),
-                    "TODO",
+                    sha256,
                     storageKey,
                     file.getContentType(),
                     file.getSize()
@@ -45,7 +57,9 @@ public class FileService {
             return new FileDTO(
                     fileModel.getId(),
                     fileModel.getName(),
+                    fileModel.getSha256(),
                     fileModel.getPath(),
+                    fileModel.getType(),
                     fileModel.getSize()
             );
         }
@@ -62,5 +76,9 @@ public class FileService {
     public FileModel get(UUID id) {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("File not found"));
+    }
+
+    public List<FileModel> getAll() {
+        return repository.findAll();
     }
 }

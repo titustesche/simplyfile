@@ -1,5 +1,6 @@
 package de.titus.simplyfile.database.models;
 
+import de.titus.simplyfile.storage.file.FileDTO;
 import jakarta.persistence.*;
 
 import java.util.UUID;
@@ -62,4 +63,15 @@ public class FileModel {
     public String setSha256(String sha256) { return this.sha256 = sha256; }
 
     //endregion
+
+    public FileDTO toDTO() {
+        return new FileDTO(
+                this.id,
+                this.name,
+                this.sha256,
+                this.path,
+                this.type,
+                this.size
+        );
+    }
 }
