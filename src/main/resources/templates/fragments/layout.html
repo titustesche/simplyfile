@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title, css)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' · ~/share'">~/share</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap">
+    <link rel="stylesheet" th:href="@{/css/root.css}">
+    <link rel="stylesheet" th:href="@{${css}}">
+</head>
+<body>
+
+<header th:fragment="topbar" class="topbar panel">
+    <a class="brand" th:href="@{/}">~/share</a>
+    <nav class="topnav" aria-label="Hauptnavigation">
+        <a th:href="@{/}">Start</a>
+        <a th:href="@{/files}">Dateien</a>
+    </nav>
+</header>
+
+<aside th:fragment="sidebar(active)" class="sidebar panel">
+    <h2 class="sidebarTitle">Dateien</h2>
+    <label th:if="${active == 'files'}" for="fileInput" class="btn btnPrimary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+        Datei hochladen
+    </label>
+    <a th:unless="${active == 'files'}" th:href="@{/files}" class="btn btnPrimary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+        Datei hochladen
+    </a>
+    <nav class="sideNav" aria-label="Ansicht">
+        <div class="eyebrow">Ansicht</div>
+        <a th:href="@{/}" th:classappend="${active == 'home'} ? ' active'" class="sideNavItem"><span>Start</span></a>
+        <a th:href="@{/files}" th:classappend="${active == 'files'} ? ' active'" class="sideNavItem">
+            <span>Alle Dateien</span>
+            <span class="count" th:if="${files != null}" th:text="${#lists.size(files)}">0</span>
+        </a>
+    </nav>
+</aside>
+
+</body>
+</html>

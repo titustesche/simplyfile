@@ -1,37 +1,39 @@
 .fileTitle {
-    color: transparent;
-    background-image: linear-gradient(to right, #30dfd0, #71e671);
-    background-clip: text;
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
 
-.fileHash {
-    padding: 0.5em;
-    font-size: 0.8em;
-    border: 1px solid rgb(204 204 204 / 0.5);
-    background-color: #000000;
-    color: #a3a3a3;
-    border-radius: 5px;
-}
-
-.downloadButton {
-    background-color: #30dfd0;
-    color: #2b2b2b;
-    border: none;
-    padding: 0.5em 1em;
-    border-radius: 5px;
-    text-decoration: none;
-}
-
-.fileInfoShelf {
+.fileCard {
+    max-width: 880px;
+    padding: 20px;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: flex-start;
-    grid-area: info;
-    flex-grow: 1;
+    gap: 20px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: 8px;
 }
 
-.fileInfoContainer {
+.fileMeta {
+    width: 100%;
+    margin: 0;
     display: grid;
-    grid-template-rows: auto auto auto;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
 }
+
+.fileMeta .wide { grid-column: 1 / -1; }
+.fileMeta dt { padding: 0 0 6px; }
+.fileMeta dd { margin: 0; font-size: 14px; color: var(--text-2); }
+
+.hash {
+    padding: 10px;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+    background: var(--panel);
+    border: 1px solid var(--line-2);
+    border-radius: 6px;
+}
+
+.downloadButton { min-height: 44px; padding: 0 16px; font-size: 14px; }

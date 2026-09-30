@@ -17,6 +17,11 @@ public class FrontendController {
         this.fileService = fileService;
     }
 
+    @GetMapping("/")
+    public String landingPage() {
+        return "index";
+    }
+
     @GetMapping("/file/{id}")
     public String filePage(
             @PathVariable("id") UUID id,
@@ -41,7 +46,7 @@ public class FrontendController {
     }
 
     @GetMapping("/upload")
-    public String uploadPage(Model model) {
-        return "upload";
+    public String uploadPage() {
+        return "redirect:/files";
     }
 }

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Start', '/css/landing.css')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: topbar}"></header>
+<div class="shell">
+    <aside th:replace="~{fragments/layout :: sidebar('home')}"></aside>
+
+    <main class="main panel landing">
+        <section class="hero">
+            <div class="prompt"><span class="accentLime">$</span> cd ~/share</div>
+            <h1 class="heroTitle">Dateien hochladen,<br>teilen, herunterladen.</h1>
+            <p class="heroText muted">
+                Zieh eine Datei ins Feld, kopier den Link und schick ihn weiter.
+                Wer den Link hat, kann die Datei herunterladen.
+            </p>
+            <div class="heroActions">
+                <a class="btn btnPrimary" th:href="@{/files}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                    Datei hochladen
+                </a>
+                <a class="btn btnGhost" th:href="@{/files}">Alle Dateien ansehen →</a>
+            </div>
+        </section>
+
+        <section class="steps" aria-label="So funktioniert's">
+            <article class="step">
+                <div class="stepNo">01</div>
+                <h2 class="stepTitle">Hochladen</h2>
+                <p class="muted">Per Drag &amp; Drop oder über den Dateidialog – auch mehrere Dateien auf einmal.</p>
+            </article>
+            <article class="step">
+                <div class="stepNo">02</div>
+                <h2 class="stepTitle">Link teilen</h2>
+                <p class="muted">Jede Datei bekommt eine eigene Seite. Den Link kopierst du mit einem Klick.</p>
+            </article>
+            <article class="step">
+                <div class="stepNo">03</div>
+                <h2 class="stepTitle">Herunterladen</h2>
+                <p class="muted">Empfänger sehen Name, Größe und SHA-256-Prüfsumme und laden direkt herunter.</p>
+            </article>
+        </section>
+    </main>
+</div>
+</body>
+</html>
