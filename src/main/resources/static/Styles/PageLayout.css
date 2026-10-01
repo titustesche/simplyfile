@@ -1,0 +1,25 @@
+.page-layout-container {
+    display: grid;
+    grid-template-areas: "sidebar content";
+    gap: 1rem;
+}
+
+.page-layout-sidebar { grid-area: sidebar; display: flex; flex-direction: column; gap: 1rem; min-width: 250px; }
+.page-layout-content { grid-area: content; min-width: 40vw; min-height: 30vh;}
+
+.page-layout-sidebar-element {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    background-color: transparent;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.page-layout-sidebar-element.active {
+    background-color: var(--tertiary-accent);
+    color: var(--light-background-color);
+}

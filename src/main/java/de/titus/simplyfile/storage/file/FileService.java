@@ -73,6 +73,11 @@ public class FileService {
         return storage.load(model.getPath());
     }
 
+    public void delete(FileModel model) throws IOException {
+        storage.delete(model.getPath());
+        repository.delete(model);
+    }
+
     public FileModel get(UUID id) {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("File not found"));

@@ -1,0 +1,102 @@
+.text-input-container {
+    position: relative;
+    display: flex;
+    padding: 1rem;
+    border-radius: var(--round-border-radius);
+    border: var(--border-width) solid var(--border-color);
+    background-color: var(--dark-background-color);
+    overflow: hidden;
+
+    .text-input {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text-color);
+        caret-color: var(--text-color);
+        width: 100%;
+        font-size: var(--text-font-size);
+        font-family: var(--text-font), sans-serif;
+        letter-spacing: 0.05em;
+    }
+
+    .text-input.censored {
+        color: transparent;
+    }
+
+    .text-input.censored::selection {
+        background-color: var(--secondary-accent);
+        color: transparent;
+    }
+
+    .censoring-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: max-content;
+        height: 100%;
+        padding: inherit;
+        background-size: 200% 100%;
+        background: linear-gradient(
+                to left,
+                var(--text-color-muted) 40%,
+                var(--text-color) 45%,
+                var(--text-color) 55%,
+                var(--text-color-muted) 60%
+        ) 0 0;
+        background-clip: text;
+        animation: censoring-animation 3s linear infinite;
+        color: transparent;
+        box-sizing: border-box;
+        z-index: 1;
+        pointer-events: none;
+        font-family: var(--text-font), monospace;
+        letter-spacing: 0.05em;
+        overflow: hidden;
+        mix-blend-mode: difference;
+    }
+
+    .censoring-overlay.hidden {
+        display: none;
+    }
+
+    .censoring-overlay.placeholder {
+        animation: none;
+        color: var(--text-color-muted);
+    }
+}
+
+@keyframes censoring-animation {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.reveal-content-button {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    right: 0;
+    padding: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: transparent;
+    background-image: linear-gradient(to left, var(--dark-background-color) 75%, transparent);
+    border: none;
+    cursor: pointer;
+    color: var(--text-color);
+    height: 100%;
+    width: 3rem;
+    z-index: 2;
+
+    svg {
+        width: 1.2rem;
+        height: 1.2rem;
+        pointer-events: none;
+    }
+}

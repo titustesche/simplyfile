@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -31,6 +32,22 @@ public class FileController {
             @RequestParam("file") MultipartFile file
     ) {
         return ResponseEntity.ok(fileService.upload(file));
+    }
+
+    @GetMapping("list")
+    public ResponseEntity<List<FileDTO>> list() {
+        return ResponseEntity.ok(
+                fileService.getAll()
+                        .stream()
+                        .map(FileDTO::new)
+                        .toList()
+        );
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<Void> delete(@PathVariable("id") UUID id) throws IOException {
+        fileService.delete(fileService.get(id));
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("{id}/download")
