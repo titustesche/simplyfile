@@ -5,11 +5,16 @@ import de.titus.simplyfile.database.models.FileModel;
 import de.titus.simplyfile.storage.StorageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,7 +36,7 @@ class FileServiceTest {
     }
 
     @Test
-    void uploadStoresFileAndReturnsDto() throws IOException {
+    void uploadStoresFileAndReturnsDto() throws IOException, NoSuchAlgorithmException {
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "hello.txt",
@@ -47,10 +52,22 @@ class FileServiceTest {
         assertNotNull(dto);
         assertEquals("hello.txt", dto.filename());
         assertEquals("storage-key", dto.path());
+        assertEquals("text/plain", dto.type());
         assertEquals(11L, dto.size());
+        assertEquals(
+                Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-256").digest("hello world".getBytes())),
+                dto.sha256()
+        );
 
         verify(storage).store(file);
-        verify(repository).save(any(FileModel.class));
+
+        ArgumentCaptor<FileModel> saved = ArgumentCaptor.forClass(FileModel.class);
+        verify(repository).save(saved.capture());
+        assertEquals("hello.txt", saved.getValue().getName());
+        assertEquals("storage-key", saved.getValue().getPath());
+        assertEquals("text/plain", saved.getValue().getType());
+        assertEquals(11L, saved.getValue().getSize());
+        assertEquals(dto.sha256(), saved.getValue().getSha256());
     }
 
     @Test
@@ -86,6 +103,22 @@ class FileServiceTest {
     }
 
     @Test
+    void uploadWrapsDatabaseFailureInRuntimeException() throws IOException {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "fail.txt",
+                "text/plain",
+                "data".getBytes()
+        );
+
+        when(storage.store(file)).thenReturn("storage-key");
+        when(repository.save(any(FileModel.class))).thenThrow(new IllegalStateException("database down"));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> fileService.upload(file));
+        assertTrue(exception.getMessage().contains("Could not store file"));
+    }
+
+    @Test
     void downloadLoadsResourceFromStorage() throws IOException {
         FileModel model = new FileModel("name.txt", "sha", "storage-key", "text/plain", 4L);
         Resource resource = new ByteArrayResource("data".getBytes());
@@ -116,6 +149,18 @@ class FileServiceTest {
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> fileService.get(id));
         assertEquals("File not found", exception.getMessage());
+    }
+
+    @Test
+    void getAllReturnsEveryStoredModel() {
+        List<FileModel> models = List.of(
+                new FileModel("a.txt", "sha-a", "path-a", "text/plain", 1L),
+                new FileModel("b.txt", "sha-b", "path-b", "text/plain", 2L)
+        );
+
+        when(repository.findAll()).thenReturn(models);
+
+        assertEquals(models, fileService.getAll());
     }
 
     @Test

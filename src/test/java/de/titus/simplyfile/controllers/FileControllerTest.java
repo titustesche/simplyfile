@@ -1,6 +1,5 @@
 package de.titus.simplyfile.controllers;
 
-import de.titus.simplyfile.database.FileRepository;
 import de.titus.simplyfile.database.models.FileModel;
 import de.titus.simplyfile.storage.file.FileDTO;
 import de.titus.simplyfile.storage.file.FileService;
@@ -18,6 +17,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -33,7 +33,6 @@ class FileControllerTest {
     @BeforeEach
     void setUp() {
         fileService = mock(FileService.class);
-        FileRepository repository = mock(FileRepository.class);
         FileController controller = new FileController(fileService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
@@ -41,7 +40,7 @@ class FileControllerTest {
     @Test
     void uploadReturnsFileDto() throws Exception {
         UUID id = UUID.randomUUID();
-        FileDTO dto = new FileDTO(id, "hello.txt", "storage-key", 11L);
+        FileDTO dto = new FileDTO(id, "hello.txt", "sha", "storage-key", "text/plain", 11L);
 
         when(fileService.upload(any(MultipartFile.class))).thenReturn(dto);
 
@@ -56,8 +55,18 @@ class FileControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()))
                 .andExpect(jsonPath("$.filename").value("hello.txt"))
+                .andExpect(jsonPath("$.sha256").value("sha"))
                 .andExpect(jsonPath("$.path").value("storage-key"))
+                .andExpect(jsonPath("$.type").value("text/plain"))
                 .andExpect(jsonPath("$.size").value(11));
+    }
+
+    @Test
+    void uploadWithoutFilePartIsRejected() throws Exception {
+        mockMvc.perform(multipart("/file/upload"))
+                .andExpect(status().isBadRequest());
+
+        verify(fileService, never()).upload(any());
     }
 
     @Test
@@ -86,9 +95,31 @@ class FileControllerTest {
 
         mockMvc.perform(get("/file/list"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].filename").value("report.pdf"))
+                .andExpect(jsonPath("$[0].sha256").value("abc"))
                 .andExpect(jsonPath("$[0].type").value("application/pdf"))
                 .andExpect(jsonPath("$[0].size").value(1024));
+    }
+
+    @Test
+    void listWithoutFilesReturnsEmptyArray() throws Exception {
+        when(fileService.getAll()).thenReturn(List.of());
+
+        mockMvc.perform(get("/file/list"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+    }
+
+    @Test
+    void invalidFileIdIsRejected() throws Exception {
+        mockMvc.perform(get("/file/{id}/download", "not-a-uuid"))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(delete("/file/{id}", "not-a-uuid"))
+                .andExpect(status().isBadRequest());
+
+        verify(fileService, never()).get(any());
     }
 
     @Test
