@@ -1,52 +1,25 @@
 package de.titus.simplyfile.controllers;
-import de.titus.simplyfile.storage.file.FileDTO;
-import de.titus.simplyfile.storage.file.FileService;
+
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import java.util.List;
 import java.util.UUID;
 
+/**
+ * Serves the single page frontend (static/index.html). The frontend reads the
+ * selected file from the path, so shared links like /file/{id} keep working.
+ */
 @Controller
 public class FrontendController {
-    private final FileService fileService;
 
-    public FrontendController(FileService fileService) {
-        this.fileService = fileService;
+    @GetMapping({"/", "/file/{id}"})
+    public String app(@PathVariable(value = "id", required = false) UUID id) {
+        return "forward:/index.html";
     }
 
-    @GetMapping("/")
-    public String landingPage() {
-        return "index";
-    }
-
-    @GetMapping("/file/{id}")
-    public String filePage(
-            @PathVariable("id") UUID id,
-            Model model
-    ) {
-        FileDTO file = fileService.get(id).toDTO();
-
-        model.addAttribute("file", file);
-
-        return "file";
-    }
-
-    @GetMapping("/files")
-    public String filesPage(Model model) {
-        List<FileDTO> files = fileService.getAll()
-                .stream()
-                .map(FileDTO::new)
-                .toList();
-
-        model.addAttribute("files", files);
-        return "files";
-    }
-
-    @GetMapping("/upload")
-    public String uploadPage() {
-        return "redirect:/files";
+    @GetMapping({"/files", "/upload"})
+    public String legacyPages() {
+        return "redirect:/";
     }
 }

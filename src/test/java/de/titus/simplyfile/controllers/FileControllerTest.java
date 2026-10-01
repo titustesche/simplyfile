@@ -13,11 +13,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -73,5 +76,31 @@ class FileControllerTest {
                 ))
                 .andExpect(content().contentType("application/octet-stream"))
                 .andExpect(content().bytes("hello world".getBytes()));
+    }
+
+    @Test
+    void listReturnsAllFiles() throws Exception {
+        when(fileService.getAll()).thenReturn(List.of(
+                new FileModel("report.pdf", "abc", "storage-key", "application/pdf", 1024L)
+        ));
+
+        mockMvc.perform(get("/file/list"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].filename").value("report.pdf"))
+                .andExpect(jsonPath("$[0].type").value("application/pdf"))
+                .andExpect(jsonPath("$[0].size").value(1024));
+    }
+
+    @Test
+    void deleteRemovesFile() throws Exception {
+        UUID id = UUID.randomUUID();
+        FileModel model = new FileModel("hello.txt", "sha", "storage-key", "text/plain", 11L);
+
+        when(fileService.get(id)).thenReturn(model);
+
+        mockMvc.perform(delete("/file/{id}", id))
+                .andExpect(status().isNoContent());
+
+        verify(fileService).delete(model);
     }
 }

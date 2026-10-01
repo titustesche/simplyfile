@@ -117,4 +117,14 @@ class FileServiceTest {
         RuntimeException exception = assertThrows(RuntimeException.class, () -> fileService.get(id));
         assertEquals("File not found", exception.getMessage());
     }
+
+    @Test
+    void deleteRemovesStorageObjectAndEntity() throws IOException {
+        FileModel model = new FileModel("hello.txt", "sha", "storage-key", "text/plain", 11L);
+
+        fileService.delete(model);
+
+        verify(storage).delete("storage-key");
+        verify(repository).delete(model);
+    }
 }

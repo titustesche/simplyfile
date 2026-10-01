@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/Styles/index.css" rel="stylesheet">
+    <link href="/Styles/Modal.css" rel="stylesheet">
+    <link href="/Styles/TextInput.css" rel="stylesheet">
+    <link href="/Styles/Popup.css" rel="stylesheet">
+    <link href="/Styles/Button.css" rel="stylesheet">
+    <link href="/Styles/Sidebar.css" rel="stylesheet">
+    <link href="/Styles/Header.css" rel="stylesheet">
+    <link href="/Styles/PromptInput.css" rel="stylesheet">
+    <link href="/Styles/Message.css" rel="stylesheet">
+    <link href="/Styles/PageLayout.css" rel="stylesheet">
+    <link href="/Styles/ContextMenu.css" rel="stylesheet">
+    <link href="/Styles/Simplyfile.css" rel="stylesheet">
+    <script src="/index.js" type="module"></script>
+    <title>Simplyfile</title>
+</head>
+    <body>
+    <div id="popup-container"></div>
+        <div id="layout-grid">
+            <div class="header main-layout">
+                <p class="title">Simplyfile</p>
+                <div id="accent-color-picker-container">
+                    <input type="color" id="accent-color-picker">
+                </div>
+            </div>
+            <div id="sidebar" class="sidebar main-layout"><p class="title">Dateien</p></div>
+            <div id="chat-container" class="chat main-layout empty">
+                <div id="message-container"></div>
+                <div id="prompt-input-container">
+                    <textarea id="prompt-input" placeholder="Datei hierher ziehen oder auswählen ..." readonly></textarea>
+                    <input id="upload-file-input" type="file" multiple hidden>
+                    <button id="prompt-model-select">Datei wählen</button>
+                    <button id="prompt-send-button">Hochladen</button>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

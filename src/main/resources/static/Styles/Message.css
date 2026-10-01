@@ -1,0 +1,21 @@
+.message-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background-color: var(--background-color);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+
+    width: fit-content;
+    min-width: 100px;
+    max-width: 80%;
+}
+
+.message-container.message-role-0 {
+    align-self: flex-end;
+}
+
+.message-timestamp {
+    font-size: 0.75rem;
+    color: var(--text-color-muted);
+}
