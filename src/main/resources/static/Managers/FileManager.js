@@ -1,5 +1,6 @@
 import {DomRegister} from "../Static/DomRegister.js";
 import {SidebarService} from "../Services/SidebarService.js";
+import {FileListService} from "../Services/FileListService.js";
 import {Popup} from "../Components/Popup.js";
 import {FileEntry} from "../Components/FileEntry.js";
 import {Modal} from "../Components/Modal.js";
@@ -10,7 +11,8 @@ import {API_ADAPTER} from "../api-adapter.js";
 
 export class FileManager {
     static MainContainer = DomRegister.mainContainer;
-    static UploadInputContainer = DomRegister.uploadInput.container;
+    static OverviewContainer = DomRegister.overview.container;
+    static DetailsContainer = DomRegister.detailsContainer;
 
     static _files = {};
     static set Files(value) {
@@ -18,7 +20,7 @@ export class FileManager {
             acc[file.id] = file;
             return acc;
         }, {});
-        SidebarService.setFiles(this.Files);
+        this._filesChanged();
     }
     static get Files() {
         // Return a copy of the files array
@@ -28,23 +30,9 @@ export class FileManager {
     static _activeFile = undefined;
     static get ActiveFile() { return this._activeFile; }
 
-    static _empty = true;
-    static set Empty(value) {
-        switch (value) {
-            case true:
-                this.MainContainer.classList.add("empty");
-                this.UploadInputContainer.classList.add("centered");
-                this.UploadInputContainer.classList.remove("bottom");
-                this._empty = true;
-                break;
-
-            case false:
-                this.MainContainer.classList.remove("empty");
-                this.UploadInputContainer.classList.remove("centered");
-                this.UploadInputContainer.classList.add("bottom");
-                this._empty = false;
-                break;
-        }
+    static _filesChanged() {
+        FileListService.setFiles(this.Files);
+        SidebarService.setStorageInfo(this.Files);
     }
 
     static async LoadFiles() {
@@ -52,12 +40,13 @@ export class FileManager {
         this.Files = files.map(file => new FileEntry(file));
     }
 
-    static ClearActiveFile(options) {
+    static ShowOverview(options) {
         if (this._activeFile) {
             this._activeFile.unload();
             this._activeFile = undefined;
         }
-        this.Empty = true;
+        this.MainContainer.classList.remove("show-details");
+        SidebarService.setActiveView("files");
         if (options?.updateHistory ?? true) this._updateHistory("/");
     }
 
@@ -68,21 +57,26 @@ export class FileManager {
         if (this._activeFile) this._activeFile.unload();
         file.load();
         this._activeFile = file;
-        this.Empty = false;
+        this.MainContainer.classList.add("show-details");
+        this.MainContainer.scrollTop = 0;
+        SidebarService.setActiveView(undefined);
 
         if (options?.updateHistory ?? true) this._updateHistory(`/file/${fileId}`);
     }
 
-    static GetFile(fileId) {
-        return this._files[fileId];
+    static AddFile(file) {
+        const fileEntry = new FileEntry(file);
+        this._files[fileEntry.id] = fileEntry;
+        this._filesChanged();
+        return fileEntry;
     }
 
-    static async UploadFile(file, onProgress) {
-        const response = await API_ADAPTER.uploadFile(file, onProgress);
-        const fileEntry = new FileEntry(response);
-        this._files[fileEntry.id] = fileEntry;
-        SidebarService.setFiles(this.Files);
-        return fileEntry;
+    static HighlightFile(fileId) {
+        this._files[fileId]?.highlight();
+    }
+
+    static GetFile(fileId) {
+        return this._files[fileId];
     }
 
     static async ConfirmDeleteFile(fileId) {
@@ -124,10 +118,10 @@ export class FileManager {
         API_ADAPTER.deleteFile(fileId)
             .then(() => {
                 const file = this._files[fileId];
-                if (this._activeFile?.id === fileId) this.ClearActiveFile();
+                if (this._activeFile?.id === fileId) this.ShowOverview();
                 delete this._files[fileId];
                 file.delete();
-                SidebarService.setFiles(this.Files);
+                this._filesChanged();
                 Popup.info("Gelöscht", `„${file.filename}“ wurde gelöscht`, 3);
             })
             .catch(reason => {

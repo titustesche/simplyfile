@@ -47,26 +47,30 @@ export class API_ADAPTER {
             })
     }
 
-    // XMLHttpRequest instead of fetch, because fetch cannot report upload progress
+    // XMLHttpRequest instead of fetch, because fetch cannot report upload progress.
+    // Returns the running request (for abort()) and a promise with the uploaded file.
     static uploadFile(file, onProgress) {
-        return new Promise((resolve, reject) => {
+        const request = new XMLHttpRequest();
+        const promise = new Promise((resolve, reject) => {
             const formData = new FormData();
             formData.append("file", file);
 
-            const request = new XMLHttpRequest();
             request.open("POST", `${API_ADAPTER.API_HTTP_URL}/file/upload`);
             request.responseType = "json";
 
             request.upload.addEventListener("progress", (e) => {
-                if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
+                if (e.lengthComputable && onProgress) onProgress(e.loaded, e.total);
             });
             request.addEventListener("load", () => {
                 if (request.status >= 200 && request.status < 300) resolve(request.response);
                 else reject(new Error(request.statusText || `HTTP ${request.status}`));
             });
-            request.addEventListener("error", () => reject(new Error("Network error")));
+            request.addEventListener("error", () => reject(new Error("Netzwerkfehler")));
+            request.addEventListener("abort", () => reject(new Error("Abgebrochen")));
 
             request.send(formData);
         });
+
+        return { request, promise };
     }
 }

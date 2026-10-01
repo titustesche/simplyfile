@@ -25,4 +25,12 @@ export const ICONS = {
         "</svg>",
     SWAP: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' class='ionicon'><path d='m464 208-80-80-80 80M384 384V144M48 304l80 80 80-80M128 128v240' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='32px'/>" +
         "</svg>",
+    CLOSE: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' class='ionicon'><path d='M368 368 144 144M368 144 144 368' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='32px'/>" +
+        "</svg>",
+    RETRY: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' class='ionicon'><path d='m320 146 32-34-32-32' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='32px'/><path d='M256 448a176 176 0 1 1 0-352h96' fill='none' stroke='currentColor' stroke-linecap='round' stroke-miterlimit='10' stroke-width='32px'/>" +
+        "</svg>",
+    ARROW_BACK: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' class='ionicon'><path d='M244 400 100 256l144-144M120 256h292' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='48px'/>" +
+        "</svg>",
+    FOLDER: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' class='ionicon'><path d='M440 432H72a40 40 0 0 1-40-40V120a40 40 0 0 1 40-40h75.89a40 40 0 0 1 22.19 6.72l27.84 18.56a40 40 0 0 0 22.19 6.72H440a40 40 0 0 1 40 40v240a40 40 0 0 1-40 40M32 192h448' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='32px'/>" +
+        "</svg>",
 }

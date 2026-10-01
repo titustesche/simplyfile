@@ -47,28 +47,62 @@ export class FileEntry {
         }
     }
 
-    createSidebarEntry() {
+    createListEntry() {
         if (this._container) return this._container;
         this._container = document.createElement("div");
-        this._container.classList.add("conversation-entry");
+        this._container.classList.add("file-row");
+        this._container.title = "Details anzeigen";
 
-        this._containerText = document.createElement("div");
-        this._containerText.classList.add("conversation-entry-text");
+        const icon = document.createElement("div");
+        icon.classList.add("icon-container", "file-row-icon");
+        icon.innerHTML = ICONS.DOCUMENT;
+        this._container.appendChild(icon);
+
+        this._containerText = document.createElement("p");
+        this._containerText.classList.add("file-row-name");
         this._containerText.innerText = this._filename;
-        this._containerText.title = `${this._filename} · ${Format.bytes(this._size)}`;
         this._container.appendChild(this._containerText);
 
-        const optionsMenu = document.createElement("div");
-        optionsMenu.classList.add("conversation-entry-options");
-        optionsMenu.classList.add("icon-container");
-        optionsMenu.innerHTML = ICONS.DOTTED_MENU;
-        optionsMenu.addEventListener("click", (e) => {
-            e.stopPropagation();
+        const size = document.createElement("p");
+        size.classList.add("file-row-size");
+        size.innerText = Format.bytes(this._size);
+        this._container.appendChild(size);
+
+        const type = document.createElement("p");
+        type.classList.add("file-row-type");
+        type.innerText = this._type ?? "–";
+        this._container.appendChild(type);
+
+        const actions = document.createElement("div");
+        actions.classList.add("file-row-actions");
+        this._container.appendChild(actions);
+
+        const addAction = (icon, title, onClick) => {
+            const action = document.createElement("div");
+            action.classList.add("icon-container", "file-row-action");
+            action.title = title;
+            action.innerHTML = icon;
+            action.addEventListener("click", (e) => {
+                e.stopPropagation();
+                onClick(e);
+            });
+            actions.appendChild(action);
+            return action;
+        };
+
+        addAction(ICONS.LINK, "Link kopieren", () => this.copyLink());
+        addAction(ICONS.DOWNLOAD, "Herunterladen", () => this.download());
+        const optionsMenu = addAction(ICONS.DOTTED_MENU, "Weitere Aktionen", (e) => {
             const menu = new ContextMenu(optionsMenu, {
                 sections: [
                     {
                         name: "basic",
                         items: [
+                            {
+                                text: "Details anzeigen",
+                                icon: ICONS.DOCUMENT,
+                                onClick: async () => FileManager.SetActiveFile(this._id)
+                            },
                             {
                                 text: "Herunterladen",
                                 icon: ICONS.DOWNLOAD,
@@ -92,19 +126,36 @@ export class FileEntry {
             menu.position = { x: e.clientX, y: e.clientY };
             menu.render();
             document.addEventListener("click", () => menu.destroy(), { once: true });
-        })
-        this._container.appendChild(optionsMenu);
+        });
 
         this._container.addEventListener("click", () => FileManager.SetActiveFile(this._id));
         return this._container;
+    }
+
+    highlight() {
+        const row = this.createListEntry();
+        row.classList.remove("highlighted");
+        // Restart the animation
+        void row.offsetWidth;
+        row.classList.add("highlighted");
     }
 
     createDetailsElement() {
         if (this._detailsContainer) return this._detailsContainer;
 
         this._detailsContainer = document.createElement("div");
-        this._detailsContainer.classList.add("conversation-message-container");
+        this._detailsContainer.classList.add("file-details-container");
         this._detailsContainer.id = `file-details-container-${this._id}`;
+
+        const backButton = new Button(undefined, {
+            identifier: "file-details-back-button",
+            icon: ICONS.ARROW_BACK,
+            text: "Alle Dateien",
+            className: "prominent-button secondary",
+            onClick: () => FileManager.ShowOverview()
+        });
+        backButton.parentContainer = this._detailsContainer;
+        backButton.render();
 
         // Title card
         const titleCard = this._createCard("file-details-title-card");
@@ -258,14 +309,11 @@ export class FileEntry {
     }
 
     load() {
-        if (!this._container) this.createSidebarEntry();
-        DomRegister.fileContainer.appendChild(this.createDetailsElement());
-        this._container.classList.add("active");
+        DomRegister.detailsContainer.appendChild(this.createDetailsElement());
     }
 
     unload() {
         this._detailsContainer?.remove();
-        this._container?.classList.remove("active");
     }
 
     delete() {

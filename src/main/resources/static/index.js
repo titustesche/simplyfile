@@ -5,17 +5,18 @@ import {SidebarService} from "./Services/SidebarService.js";
 import {HeaderService} from "./Services/HeaderService.js";
 import {SettingsManager} from "./Managers/SettingsManager.js";
 import {FileManager} from "./Managers/FileManager.js";
-import {UploadInput} from "./Managers/UploadInputManager.js";
+import {UploadManager} from "./Managers/UploadManager.js";
+import {FileListService} from "./Services/FileListService.js";
 import {BodyText} from "./Components/BodyText.js";
 
 const selectFileFromLocation = () => {
     const fileId = FileManager.FileIdFromLocation();
-    if (!fileId) return FileManager.ClearActiveFile({ updateHistory: false });
+    if (!fileId) return FileManager.ShowOverview({ updateHistory: false });
 
     if (FileManager.GetFile(fileId)) {
         FileManager.SetActiveFile(fileId, { updateHistory: false });
     } else {
-        FileManager.ClearActiveFile();
+        FileManager.ShowOverview();
         Popup.error("Datei nicht gefunden", "Die Datei existiert nicht oder wurde gelöscht");
     }
 };
@@ -37,7 +38,8 @@ window.onload = async () => {
     SettingsManager.loadSettings();
     SidebarService.setupSidebar();
     HeaderService.setupHeader();
-    UploadInput.init();
+    FileListService.setupFileList();
+    UploadManager.init();
 
     try {
         await FileManager.LoadFiles();

@@ -10,7 +10,6 @@
     <link href="/Styles/Button.css" rel="stylesheet">
     <link href="/Styles/Sidebar.css" rel="stylesheet">
     <link href="/Styles/Header.css" rel="stylesheet">
-    <link href="/Styles/PromptInput.css" rel="stylesheet">
     <link href="/Styles/Message.css" rel="stylesheet">
     <link href="/Styles/PageLayout.css" rel="stylesheet">
     <link href="/Styles/ContextMenu.css" rel="stylesheet">
@@ -27,15 +26,27 @@
                     <input type="color" id="accent-color-picker">
                 </div>
             </div>
-            <div id="sidebar" class="sidebar main-layout"><p class="title">Dateien</p></div>
-            <div id="chat-container" class="chat main-layout empty">
-                <div id="message-container"></div>
-                <div id="prompt-input-container">
-                    <textarea id="prompt-input" placeholder="Datei hierher ziehen oder auswählen ..." readonly></textarea>
-                    <input id="upload-file-input" type="file" multiple hidden>
-                    <button id="prompt-model-select">Datei wählen</button>
-                    <button id="prompt-send-button">Hochladen</button>
+            <div id="sidebar" class="sidebar main-layout"><p class="title">Menü</p></div>
+            <div id="main-container" class="main main-layout">
+                <div id="overview" class="overview">
+                    <div class="page-head">
+                        <h1 class="title">Meine Dateien</h1>
+                        <p id="file-count" class="muted-text"></p>
+                    </div>
+
+                    <label id="dropzone" class="dropzone" for="upload-file-input">
+                        <input id="upload-file-input" type="file" multiple hidden>
+                        <span class="icon-container dropzone-icon" id="dropzone-icon"></span>
+                        <span class="dropzone-title" id="dropzone-title">Dateien hierher ziehen</span>
+                        <span class="muted-text">oder <span class="accent-text">Computer durchsuchen</span> · mehrere Dateien möglich</span>
+                    </label>
+
+                    <div id="upload-list" class="upload-list"></div>
+
+                    <div id="file-filter" class="file-filter"></div>
+                    <div id="file-list" class="file-list"></div>
                 </div>
+                <div id="details" class="details"></div>
             </div>
         </div>
     </body>
