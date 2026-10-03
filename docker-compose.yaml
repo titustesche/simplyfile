@@ -9,13 +9,34 @@ services:
     depends_on:
       - postgres
       - redis
+      - file-analysis
     environment:
+        FILE_ANALYSIS_URL: http://file-analysis:8000
         SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/simplyfile
         SPRING_DATASOURCE_USERNAME: simplyfile
         SPRING_DATASOURCE_PASSWORD: 123456
         SPRING_REDIS_HOST: redis
         SPRING_REDIS_PORT: 6379
         SPRING_REDIS_PASSWORD: 123456
+
+  file-analysis:
+    build:
+      context: ./file-analysis
+    image: simplyfile-file-analysis:latest
+    env_file:
+      - path: ./file-analysis/.env
+        required: false
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - model-cache:/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   postgres:
     image: postgres:12.2
@@ -39,6 +60,7 @@ services:
 
 volumes:
   postgres-data:
+  model-cache:
 
 networks:
     simplyfile_network:
